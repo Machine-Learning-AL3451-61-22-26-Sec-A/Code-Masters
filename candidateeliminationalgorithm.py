@@ -1,3 +1,5 @@
+import streamlit as st
+import pandas as pd
 import numpy as np
 
 class CandidateElimination:
@@ -13,7 +15,7 @@ class CandidateElimination:
         return True
 
     def eliminate(self, instance, label):
-        if label == 'Y':  # Positive instance
+        if label == 'Yes':  # Positive instance
             self.G = [g for g in self.G if self.is_consistent(instance, g)]
             for s in list(self.S):
                 if not self.is_consistent(instance, s):
@@ -35,25 +37,33 @@ class CandidateElimination:
                             self.G.append(new_g)
 
     def print_hypotheses(self):
-        print("Specific boundary (S):", self.S)
-        print("General boundary (G):", self.G)
+        st.write("Specific boundary (S):", self.S)
+        st.write("General boundary (G):", self.G)
 
+# Title
+st.title("Candidate Elimination Algorithm")
 
-# Example usage:
-# Assume the dataset has 4 features
-ce = CandidateElimination(4)
+# Upload CSV file
+uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
 
-# Define a dataset
-data = [
-    (['Sunny', 'Warm', 'Normal', 'Strong'], 'Y'),
-    (['Sunny', 'Warm', 'High', 'Strong'], 'Y'),
-    (['Rainy', 'Cold', 'High', 'Strong'], 'N'),
-    (['Sunny', 'Warm', 'High', 'Strong'], 'Y'),
-]
+if uploaded_file is not None:
+    # Read the data
+    data = pd.read_csv(uploaded_file)
 
-# Train the algorithm
-for instance, label in data:
-    ce.eliminate(instance, label)
+    # Display the data
+    st.write("Uploaded data:")
+    st.write(data)
 
-# Print the hypotheses
-ce.print_hypotheses()
+    # Get number of features
+    num_features = len(data.columns) - 1
+
+    # Train the Candidate Elimination algorithm
+    ce = CandidateElimination(num_features)
+    for index, row in data.iterrows():
+        instance = row[:-1].values
+        label = row[-1]
+        ce.eliminate(instance, label)
+
+    # Print the hypotheses
+    st.write("Final hypotheses:")
+    ce.print_hypotheses()
