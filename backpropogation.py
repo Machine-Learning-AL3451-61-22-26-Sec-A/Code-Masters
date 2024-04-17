@@ -1,49 +1,41 @@
 import streamlit as st
 import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
 
-# Define the main Streamlit app
-def main():
-    st.title('Backpropagation Demo')
+# Backpropagation algorithm
+def backpropagation(inputs, targets, weights, learning_rate, epochs):
+    for epoch in range(epochs):
+        predictions = forward_pass(inputs, weights)
+        loss = compute_loss(targets, predictions)
+        gradient = -2 * np.dot(inputs.T, (targets - predictions))
+        weights = update_weights(weights, gradient, learning_rate)
+    return weights
 
-    # User-defined parameters
-    num_layers = st.slider('Number of Layers', min_value=2, max_value=5, value=3)
-    layer_sizes = [st.slider(f'Layer {i+1} Size', min_value=1, max_value=10, value=4) for i in range(num_layers)]
-    learning_rate = st.slider('Learning Rate', min_value=0.01, max_value=1.0, value=0.1)
-    epochs = st.slider('Number of Epochs', min_value=100, max_value=1000, value=500)
+def forward_pass(inputs, weights):
+    return np.dot(inputs, weights)
 
-    # Define the neural network model using TensorFlow
-    model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Input(shape=(layer_sizes[0],)))
-    for size in layer_sizes[1:]:
-        model.add(tf.keras.layers.Dense(size, activation='sigmoid'))
-    model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=learning_rate), loss='mse')
+def compute_loss(targets, predictions):
+    return np.mean(np.square(targets - predictions))
 
-    # Generate random training data
-    np.random.seed(42)
-    X = np.random.randn(100, layer_sizes[0])
-    y = np.random.randint(2, size=(100, layer_sizes[-1]))
+def update_weights(weights, gradient, learning_rate):
+    return weights - learning_rate * gradient
 
-    # Train the neural network model
-    history = model.fit(X, y, epochs=epochs, verbose=0)
+# Streamlit app
+st.title('Neural Network Backpropagation')
+st.sidebar.header('Training Parameters')
 
-    # Plot the loss curve
-    st.subheader('Loss Curve')
-    fig, ax = plt.subplots()
-    ax.plot(history.history['loss'])
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('Loss')
-    st.pyplot(fig)
+# Input parameters
+learning_rate = st.sidebar.slider('Learning Rate', min_value=0.01, max_value=1.0, value=0.1, step=0.01)
+epochs = st.sidebar.slider('Epochs', min_value=100, max_value=10000, value=1000, step=100)
 
-    # Display final weights and biases
-    st.subheader('Final Weights and Biases')
-    for i, layer in enumerate(model.layers[1:]):
-        weights, biases = layer.get_weights()
-        st.write(f'Layer {i+1} - Weights:')
-        st.write(weights)
-        st.write(f'Layer {i+1} - Biases:')
-        st.write(biases)
+# Training data
+inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+targets = np.array([[0], [1], [1], [0]])
 
-if __name__ == "__main__":
-    main()
+# Train the model
+weights = backpropagation(inputs, targets, np.random.rand(2, 1), learning_rate, epochs)
+
+# Test the trained model
+st.subheader('Test Results:')
+for i in range(len(inputs)):
+    output = forward_pass(inputs[i], weights)
+    st.write(f"Input: {inputs[i]}, Output: {output[0]}")
