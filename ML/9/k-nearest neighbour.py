@@ -1,46 +1,49 @@
+import streamlit as st
+import pandas as pd
 import csv
-hypo = ['%','%','%','%','%','%'];
 
-with open('trainingdata.csv') as csv_file:
-    readcsv = csv.reader(csv_file, delimiter=',')
-    print(readcsv)
+def find_s_algorithm(data):
+    hypo = ['%', '%', '%', '%', '%', '%']
+    positive_examples = []
+
+    for row in data:
+        if row[len(row) - 1].upper() == "YES":
+            positive_examples.append(row)
+
+    TotalExamples = len(positive_examples)
+    d = len(positive_examples[0]) - 1
+
+    hypo = positive_examples[0][:d]
+
+    for i in range(1, TotalExamples):
+        for k in range(d):
+            if hypo[k] != positive_examples[i][k]:
+                hypo[k] = '?'
+
+    return hypo, positive_examples
+
+# Streamlit app
+st.title("Find-S Algorithm")
+st.write("This app runs the Find-S algorithm to find the maximally specific hypothesis from given training data.")
+
+# File uploader
+uploaded_file = st.file_uploader("Upload a CSV file", type="csv")
+
+if uploaded_file is not None:
+    data = list(csv.reader(uploaded_file))
     
-    data = []
-    print("\nThe given training examples are:")
-    for row in readcsv:
-        print(row)
-        if row[len(row)-1].upper() == "YES":
-            data.append(row)
+    st.write("### The given training examples are:")
+    st.write(pd.DataFrame(data))
 
-print("\nThe positive examples are:");
-for x in data:
-    print(x);
-print("\n");
+    hypo, positive_examples = find_s_algorithm(data)
 
-TotalExamples = len(data);
-i=0;
-j=0;
-k=0;
-print("The steps of the Find-s algorithm are :\n",hypo);
-list = [];
-p=0;
-d=len(data[p])-1;
-for j in range(d):
-    list.append(data[i][j]);
-hypo=list;
-i=1;
-for i in range(TotalExamples):
-    for k in range(d):
-        if hypo[k]!=data[i][k]:
-            hypo[k]='?';
-            k=k+1;        
-        else:
-            hypo[k];
-    print(hypo);
-i=i+1;
+    st.write("### The positive examples are:")
+    st.write(pd.DataFrame(positive_examples))
 
-print("\nThe maximally specific Find-s hypothesis for the given training examples is :");
-list=[];
-for i in range(d):
-    list.append(hypo[i]);
-print(list);
+    st.write("### The steps of the Find-S algorithm are:")
+    st.write(hypo)
+
+    st.write("### The maximally specific Find-S hypothesis for the given training examples is:")
+    st.write(hypo)
+else:
+    st.write("Please upload a CSV file.")
